@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel de administración · Mendoza Automoción</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="is-admin">
+
+  <!-- ============================ ACCESO ============================ -->
+  <main class="login" id="login" hidden>
+    <form class="login__card" id="login-form" novalidate>
+      <img class="login__logo" src="img/logo-light.svg" alt="Mendoza Automoción" width="200" height="60">
+      <h1>Panel de administración</h1>
+      <p class="login__sub">Entra con tu correo y tu contraseña para editar la web.</p>
+      <label class="field"><span>Correo</span><input id="login-email" type="email" autocomplete="username" required></label>
+      <label class="field"><span>Contraseña</span>
+        <span class="pass"><input id="login-pass" type="password" autocomplete="current-password" required><button type="button" class="pass__eye" id="login-eye" aria-label="Mostrar contraseña">Ver</button></span>
+      </label>
+      <p class="form-msg" id="login-msg" role="alert" hidden></p>
+      <button class="btn btn--red btn--block" type="submit" id="login-btn">Entrar</button>
+      <a class="login__back" href="index.html">← Volver a la web</a>
+    </form>
+  </main>
+
+  <main class="login" id="setup" hidden>
+    <div class="login__card">
+      <img class="login__logo" src="img/logo-light.svg" alt="Mendoza Automoción" width="200" height="60">
+      <h1>Falta conectar el panel</h1>
+      <p class="login__sub">El panel guarda los cambios en Firebase. Pon la <code>apiKey</code> y el <code>projectId</code> de tu proyecto en <code>js/config.js</code> (apartado <code>firebase</code>). Los pasos están en <code>ADMIN-LEEME.md</code>.</p>
+      <a class="btn btn--glass btn--block" href="index.html">Volver a la web</a>
+    </div>
+  </main>
+
+  <!-- ============================ PANEL ============================= -->
+  <div class="app" id="app" hidden>
+    <header class="top">
+      <a class="top__brand" href="index.html" target="_blank" rel="noopener"><img src="img/logo-light.svg" alt="Mendoza Automoción" width="150" height="45"><span>Admin</span></a>
+      <nav class="tabs" aria-label="Secciones del panel">
+        <button type="button" class="tabs__btn" data-tab="stock" aria-selected="true">Vehículos</button>
+        <button type="button" class="tabs__btn" data-tab="vendidos">Vendidos</button>
+        <button type="button" class="tabs__btn" data-tab="negocio">Datos y horario</button>
+        <button type="button" class="tabs__btn" data-tab="textos">Textos</button>
+        <button type="button" class="tabs__btn" data-tab="fotos">Fotos de la web</button>
+      </nav>
+      <div class="top__actions">
+        <a class="btn btn--ghost btn--sm" href="index.html" target="_blank" rel="noopener">Ver web ↗</a>
+        <div class="user">
+          <button type="button" class="user__btn" id="user-btn" aria-expanded="false"><span class="user__av" id="user-av">A</span><span class="user__mail" id="user-mail"></span></button>
+          <div class="user__menu" id="user-menu" hidden>
+            <button type="button" id="pass-open">Cambiar contraseña</button>
+            <button type="button" id="logout">Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Vehículos en stock -->
+    <section class="panel" id="tab-stock">
+      <div class="panel__head">
+        <div><h2>Vehículos en venta</h2><p class="muted" id="stock-sub">Lo que se ve en "Coches disponibles".</p></div>
+        <div class="panel__tools">
+          <input class="search" id="stock-search" type="search" placeholder="Buscar marca o modelo…" aria-label="Buscar vehículo">
+          <button class="btn btn--red" type="button" id="add-vehicle">+ Añadir vehículo</button>
+        </div>
+      </div>
+      <div class="import" id="import-box" hidden>
+        <div><strong>La base de datos está vacía.</strong><p class="muted small">Pulsa el botón para copiar el stock, los vendidos y los datos que ya tiene la web. Solo hay que hacerlo una vez.</p></div>
+        <button class="btn btn--red" type="button" id="import-btn">Importar datos actuales</button>
+      </div>
+      <ul class="rows" id="stock-list"></ul>
+    </section>
+
+    <!-- Vendidos -->
+    <section class="panel" id="tab-vendidos" hidden>
+      <div class="panel__head">
+        <div><h2>Vendidos</h2><p class="muted">Salen en la cinta de "Más de X vendidos". El más reciente va primero.</p></div>
+        <div class="panel__tools">
+          <input class="search" id="sold-search" type="search" placeholder="Buscar…" aria-label="Buscar vendido">
+          <button class="btn btn--glass" type="button" id="add-sold">+ Añadir vendido</button>
+        </div>
+      </div>
+      <ul class="rows" id="sold-list"></ul>
+    </section>
+
+    <!-- Datos del negocio -->
+    <section class="panel" id="tab-negocio" hidden>
+      <div class="panel__head"><div><h2>Datos del negocio y horario</h2><p class="muted">Se usan en toda la web: botones de WhatsApp, pie de página, ubicación y el "Abierto ahora".</p></div></div>
+      <form class="cardbox" id="biz-form" novalidate>
+        <div class="grid2">
+          <label class="field"><span>Teléfono (y WhatsApp)</span><input name="phoneDisplay" type="tel" placeholder="667 83 02 80" required></label>
+          <label class="field"><span>WhatsApp si es otro número <em>(opcional)</em></span><input name="whatsapp" type="tel" placeholder="Vacío = el mismo teléfono"></label>
+          <label class="field"><span>Correo de contacto <em>(opcional)</em></span><input name="email" type="email" placeholder="info@…"></label>
+          <label class="field"><span>Total de vehículos vendidos</span><input name="soldTotal" type="number" min="0" inputmode="numeric"></label>
+          <label class="field field--wide"><span>Dirección completa</span><input name="address" type="text"></label>
+          <label class="field field--wide"><span>Dirección corta</span><input name="addressShort" type="text"></label>
+          <label class="field"><span>Instagram (enlace)</span><input name="instagram" type="url"></label>
+          <label class="field"><span>Facebook (enlace)</span><input name="facebook" type="url"></label>
+        </div>
+        <h3 class="cardbox__h">Horario</h3>
+        <p class="muted small">Marca los días que abrís y pon las horas. La tarde es opcional.</p>
+        <div class="hours" id="hours-editor"></div>
+        <div class="hours-preview"><span class="muted small">Así se verá en la web:</span><ul id="hours-preview"></ul></div>
+        <div class="savebar"><button class="btn btn--red" type="submit">Guardar cambios</button></div>
+      </form>
+    </section>
+
+    <!-- Textos -->
+    <section class="panel" id="tab-textos" hidden>
+      <div class="panel__head">
+        <div><h2>Textos de la web</h2><p class="muted">Cambia cualquier texto. Truco: <code>*así*</code> sale en rojo, <code>**así**</code> en negrita. <code>{vendidos}</code> pone el número de vendidos.</p></div>
+        <div class="panel__tools"><button class="btn btn--red" type="button" id="texts-save">Guardar textos</button></div>
+      </div>
+      <div id="texts-editor" class="texts"></div>
+    </section>
+
+    <!-- Fotos de la web -->
+    <section class="panel" id="tab-fotos" hidden>
+      <div class="panel__head"><div><h2>Fotos de la web</h2><p class="muted">Las fotos de las secciones. Se cambian al momento al subir una nueva.</p></div></div>
+      <ul class="photos-grid" id="site-photos"></ul>
+    </section>
+  </div>
+
+  <!-- ====================== EDITOR DE VEHÍCULO ====================== -->
+  <dialog class="sheet" id="vehicle-editor" aria-labelledby="ve-title">
+    <form id="ve-form" novalidate>
+      <header class="sheet__head">
+        <h2 id="ve-title">Nuevo vehículo</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Cerrar">✕</button>
+      </header>
+      <div class="sheet__body">
+        <h3 class="sheet__h">Fotos</h3>
+        <p class="muted small">La primera es la principal. Usa las flechas para cambiar el orden. Mejor en horizontal.</p>
+        <div class="dropzone" id="ve-drop">
+          <input type="file" id="ve-files" accept="image/*" multiple hidden>
+          <ul class="thumbs" id="ve-photos"></ul>
+          <button type="button" class="dropzone__add" id="ve-add-photos"><strong>+ Añadir fotos</strong><span>o arrástralas aquí</span></button>
+        </div>
+
+        <h3 class="sheet__h">Datos</h3>
+        <div class="grid2">
+          <label class="field"><span>Tipo</span><select name="tipo"><option value="coche">Coche</option><option value="moto">Moto</option></select></label>
+          <label class="field"><span>Marca</span><input name="marca" required placeholder="BMW"></label>
+          <label class="field field--wide"><span>Modelo y versión</span><input name="modelo" placeholder="320d M Sport"></label>
+          <label class="field"><span>Año</span><input name="anio" type="number" inputmode="numeric" min="1950" max="2100"></label>
+          <label class="field"><span>Kilómetros</span><input name="km" type="text" inputmode="numeric" placeholder="85.000"></label>
+          <label class="field"><span>Potencia (CV)</span><input name="cv" type="number" inputmode="numeric" min="0"></label>
+          <label class="field"><span>Combustible</span><select name="combustible"><option>Gasolina</option><option>Diésel</option><option>Híbrido</option><option>Híbrido enchufable</option><option>Eléctrico</option><option>GLP</option></select></label>
+          <label class="field"><span>Cambio</span><select name="cambio"><option value="">—</option><option>Manual</option><option>Automático</option></select></label>
+          <label class="field"><span>Precio (€)</span><input name="precio" type="text" inputmode="numeric" placeholder="Vacío = Consultar precio"></label>
+          <label class="field"><span>Garantía</span><input name="garantia" placeholder="12 meses"></label>
+          <label class="check field--wide"><input name="destacado" type="checkbox"><span>Destacado (sale de los primeros)</span></label>
+          <label class="field field--wide"><span>Descripción <em>(opcional)</em></span><textarea name="descripcion" rows="3" placeholder="Único dueño, libro de revisiones, ITV recién pasada…"></textarea></label>
+          <label class="field field--wide"><span>Equipamiento <em>(uno por línea, opcional)</em></span><textarea name="equipamiento" rows="4" placeholder="Navegador&#10;Cámara trasera&#10;Asientos calefactables"></textarea></label>
+        </div>
+      </div>
+      <footer class="sheet__foot">
+        <p class="form-msg" id="ve-msg" role="alert" hidden></p>
+        <button type="button" class="btn btn--ghost" data-close>Cancelar</button>
+        <button type="submit" class="btn btn--red" id="ve-save">Guardar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Confirmación -->
+  <dialog class="confirm" id="confirm">
+    <form method="dialog">
+      <h2 id="confirm-title">¿Seguro?</h2>
+      <p id="confirm-text"></p>
+      <div class="confirm__actions">
+        <button class="btn btn--ghost" value="no">Cancelar</button>
+        <button class="btn btn--red" value="yes" id="confirm-yes">Sí</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Cambiar contraseña -->
+  <dialog class="confirm" id="pass-dialog">
+    <form id="pass-form" novalidate>
+      <h2>Cambiar contraseña</h2>
+      <label class="field"><span>Nueva contraseña (mínimo 8)</span><input id="pass-new" type="password" minlength="8" autocomplete="new-password" required></label>
+      <p class="form-msg" id="pass-msg" role="alert" hidden></p>
+      <div class="confirm__actions">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--red" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/vehicles.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
