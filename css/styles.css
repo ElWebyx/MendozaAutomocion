@@ -1170,3 +1170,65 @@ body { background: var(--black); color: rgba(255, 255, 255, 0.86); }
 .broker__steps span[data-text] { display: block; margin-top: 3px; font-size: .875rem; line-height: 1.45; color: rgba(255,255,255,.72); }
 .broker__actions { margin-top: 26px !important; }
 @media (max-width: 640px) { .broker__steps { grid-template-columns: 1fr; } }
+
+/* =====================================================================
+   Ajustes para móvil
+   ===================================================================== */
+@media (max-width: 1024px) {
+  .bento > .tile--photo, .bento > .tile--big, .bento > .tile--wide { grid-column: 1 / -1 !important; }
+}
+@media (max-width: 600px) {
+  /* Servicios: una sola columna, sin huecos ni textos cortados */
+  .bento { grid-template-columns: 1fr !important; grid-auto-rows: auto !important; gap: 14px; }
+  .bento > .tile { grid-column: 1 / -1 !important; grid-row: auto !important; min-height: 0 !important; padding: 24px; justify-content: flex-start; }
+  .bento > .tile--photo { min-height: 380px !important; padding: 0; justify-content: flex-end; }
+  .tile--photo .tile__body { padding: 24px; }
+  .tile--photo h3 { font-size: 1.45rem; }
+  .tile--big .tile__num { font-size: 4.5rem; line-height: 1; }
+  .tile--wide { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .tile--wide > div { flex: none; }
+  .islands { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* Espaciado general más compacto y elegante */
+  .sec, .section { padding-block: 64px; }
+  .container { padding-inline: 20px; }
+  .title { font-size: clamp(1.9rem, 1.4rem + 3vw, 2.4rem); }
+  .lead { font-size: 1rem; }
+
+  /* Portada */
+  .hero__place { font-size: 1rem; line-height: 1.4; align-items: flex-start; }
+  .hero__lead { font-size: 1rem; }
+
+  /* Vendidos: tarjetas un poco más pequeñas */
+  .sold-card { width: 240px; }
+
+  /* Vende tu coche: menos hueco entre el chat y el texto */
+  .sell { gap: 32px; }
+  .wa__body { padding: 14px 12px 16px; }
+  .wa__msg { max-width: 88%; font-size: .9rem; }
+
+  /* MD Auto Broker */
+  .broker { border-radius: 22px; }
+  .broker__copy { padding: 28px 22px 30px !important; }
+  .broker__title { font-size: 1.85rem; }
+  .broker__actions { flex-direction: column; align-items: stretch; gap: 14px; }
+  .broker__actions .btn { justify-content: center; }
+  .broker__phone { justify-content: center; }
+
+  /* Sobre nosotros: cifras en fila */
+  .stats { grid-template-columns: repeat(3, 1fr) !important; }
+  .stats li { padding: 22px 6px !important; }
+  .stats__n { font-size: 1.9rem !important; }
+  .stats__l { font-size: .75rem !important; }
+
+  /* Ubicación */
+  .location__map { min-height: 420px; border-radius: 22px; }
+  .info-cards li { padding: 18px; }
+
+  /* Ficha del coche a pantalla completa */
+  .modal { width: 100vw !important; max-width: 100vw !important; max-height: 100dvh !important; height: 100dvh; margin: 0 !important; border-radius: 0 !important; }
+  .vd__body { padding: 22px 20px 28px !important; }
+}
+@media (max-width: 600px) {
+  .stats li + li { border-left: 1px solid rgba(255,255,255,.08) !important; border-top: 0 !important; }
+}
