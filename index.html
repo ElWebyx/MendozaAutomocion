@@ -72,6 +72,7 @@
         <ul>
           <li><a href="#inicio">Inicio</a></li>
           <li><a href="#coches">Coches disponibles</a></li>
+          <li><a href="#financiacion">Financiación</a></li>
           <li><a href="#vendidos">Vendidos</a></li>
           <li><a href="#servicios">Servicios</a></li>
           <li><a href="#nosotros">Sobre nosotros</a></li>
@@ -94,6 +95,7 @@
         <ul>
           <li><a href="#inicio">Inicio</a></li>
           <li><a href="#coches">Coches disponibles</a></li>
+          <li><a href="#financiacion">Financiación</a></li>
           <li><a href="#servicios">Servicios</a></li>
           <li><a href="#vender">Vende tu coche</a></li>
           <li><a href="#vendidos">Vendidos</a></li>
@@ -176,6 +178,7 @@
               <option value="precio-asc">Precio: de menor a mayor</option>
               <option value="precio-desc">Precio: de mayor a menor</option>
               <option value="km-asc">Menos kilómetros</option>
+              <option value="ofertas">Ofertas primero</option>
             </select>
           </label>
         </div>
@@ -199,6 +202,39 @@
             <svg class="i" aria-hidden="true"><use href="#i-wa"/></svg>
             <span>Encárganos tu coche</span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================ FINANCIACIÓN ============================ -->
+    <section class="sec sec--finance" id="financiacion" aria-labelledby="fin-title">
+      <div class="container fin">
+        <div class="fin__copy">
+          <p class="kicker" data-reveal data-text="financiacion-1"><span></span>Financiación</p>
+          <h2 class="title" id="fin-title" data-reveal data-text="financiacion-2">Calcula tu <em>cuota</em></h2>
+          <p class="lead" data-reveal data-text="financiacion-3">Elige cuánto quieres financiar y en cuántos meses. Te decimos al momento cuánto pagarías al mes.</p>
+          <ul class="perks" data-reveal>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>De 24 a 96 meses</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Respuesta rápida</li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Te lo tramitamos nosotros</li>
+          </ul>
+        </div>
+        <div class="calc" id="calc" data-reveal>
+          <label class="calc__label" for="calc-amount">Importe a financiar</label>
+          <div class="calc__amount"><input id="calc-amount" type="text" inputmode="numeric" value="15.000" autocomplete="off"><span>€</span></div>
+          <input class="calc__range" id="calc-range" type="range" min="3000" max="60000" step="500" value="15000" aria-label="Importe a financiar">
+          <div class="calc__scale" aria-hidden="true"><span>3.000 €</span><span>60.000 €</span></div>
+          <p class="calc__label">Plazo</p>
+          <div class="calc__terms" id="calc-terms" role="group" aria-label="Plazo en meses"></div>
+          <div class="calc__result">
+            <span>Tu cuota al mes</span>
+            <strong id="calc-out" aria-live="polite">—</strong>
+            <small id="calc-note"></small>
+          </div>
+          <a class="btn btn--red btn--lg btn--block" id="calc-wa" href="https://wa.me/34667830280" target="_blank" rel="noopener">
+            <svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Quiero esta financiación</span>
+          </a>
+          <p class="calc__legal">Cálculo orientativo. La cuota final depende del estudio de la entidad financiera.</p>
         </div>
       </div>
     </section>
@@ -567,6 +603,7 @@
         <h2 class="vd__title" id="vd-title"></h2>
         <p class="vd__version" id="vd-version"></p>
         <p class="vd__price" id="vd-price"></p>
+        <div class="vfin" id="vd-fin" hidden></div>
         <p class="vd__desc" id="vd-desc" hidden></p>
         <dl class="vd__specs" id="vd-specs"></dl>
         <h3 class="vd__sub">Equipamiento destacado</h3>

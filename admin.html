@@ -103,6 +103,11 @@
           <label class="field"><span>Instagram (enlace)</span><input name="instagram" type="url"></label>
           <label class="field"><span>Facebook (enlace)</span><input name="facebook" type="url"></label>
         </div>
+        <h3 class="cardbox__h">Financiación</h3>
+        <p class="muted small">Coeficientes de la financiera (fila «Vida Plus»). Cuota al mes = importe × coeficiente. El plazo más largo es el que sale en los anuncios como «Desde X €/mes».</p>
+        <div class="fin-grid" id="fin-editor"></div>
+        <label class="field" style="max-width:220px;margin-top:12px"><span>T.I.N.</span><input name="tin" type="text" placeholder="10,75 %"></label>
+
         <h3 class="cardbox__h">Horario</h3>
         <p class="muted small">Marca los días que abrís y pon las horas. La tarde es opcional.</p>
         <div class="hours" id="hours-editor"></div>
@@ -154,8 +159,10 @@
           <label class="field"><span>Combustible</span><select name="combustible"><option>Gasolina</option><option>Diésel</option><option>Híbrido</option><option>Híbrido enchufable</option><option>Eléctrico</option><option>GLP</option></select></label>
           <label class="field"><span>Cambio</span><select name="cambio"><option value="">—</option><option>Manual</option><option>Automático</option></select></label>
           <label class="field"><span>Precio (€)</span><input name="precio" type="text" inputmode="numeric" placeholder="Vacío = Consultar precio"></label>
+          <label class="field"><span>Precio en oferta (€) <em>(opcional)</em></span><input name="oferta" type="text" inputmode="numeric" placeholder="Vacío = sin oferta"></label>
           <label class="field"><span>Garantía</span><input name="garantia" placeholder="12 meses"></label>
           <label class="check field--wide"><input name="destacado" type="checkbox"><span>Destacado (sale de los primeros)</span></label>
+          <label class="check field--wide"><input name="reservado" type="checkbox"><span>Reservado (sigue en la web con la etiqueta «Reservado»)</span></label>
           <label class="field field--wide"><span>Descripción <em>(opcional)</em></span><textarea name="descripcion" rows="3" placeholder="Único dueño, libro de revisiones, ITV recién pasada…"></textarea></label>
           <label class="field field--wide"><span>Equipamiento <em>(uno por línea, opcional)</em></span><textarea name="equipamiento" rows="4" placeholder="Navegador&#10;Cámara trasera&#10;Asientos calefactables"></textarea></label>
         </div>
