@@ -217,3 +217,8 @@ input[type=time] { width: auto; min-height: 38px; padding: 6px 8px; }
 #tab-textos .panel__head { position: sticky; top: 61px; z-index: 5; margin-inline: -24px; padding: 14px 24px; background: rgba(11,11,12,.92); backdrop-filter: blur(10px); }
 @media (max-width: 900px) { #tab-textos .panel__head { top: 96px; margin-inline: -14px; padding-inline: 14px; } }
 .import { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; padding: 18px 20px; border: 1px solid rgba(209,10,10,.4); border-radius: var(--r); background: rgba(209,10,10,.08); }
+.row__price s { color: var(--muted); font-weight: 500; font-size: .85em; }
+.row__price .sale { color: #ff5a5a; }
+.tag--res { background: rgba(245,179,1,.18); color: #fcd34d; }
+.fin-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 12px; }
+@media (max-width: 760px) { .fin-grid { grid-template-columns: repeat(4, 1fr); } }
