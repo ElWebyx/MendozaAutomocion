@@ -168,7 +168,7 @@
     const SITE = window.SITE;
     const toLocal = (r) => ({
       id: r.id, tipo: r.tipo || "coche", marca: r.marca || "", modelo: r.modelo || "", anio: r.anio, km: r.km || 0, cv: r.cv,
-      combustible: r.combustible || "", cambio: r.cambio || "", precio: r.precio, garantia: r.garantia || "",
+      combustible: r.combustible || "", cambio: r.cambio || "", precio: r.precio, oferta: r.oferta ?? null, reservado: !!r.reservado, garantia: r.garantia || "",
       fotos: r.fotos || [], destacado: !!r.destacado, descripcion: r.descripcion || "", equipamiento: r.equipamiento || ""
     });
     window.VEHICLES = rows.filter((r) => !r.vendido).sort((a, b) => (a.orden || 0) - (b.orden || 0)).map(toLocal);
@@ -188,6 +188,7 @@
     if (n.schedule) { SITE.schedule = n.schedule; SITE.hours = hoursFromSchedule(n.schedule); }
     if (n.social) SITE.social = Object.assign({}, SITE.social, n.social);
     if (n.soldTotal != null) window.SOLD_TOTAL = n.soldTotal;
+    if (n.finance && n.finance.coef && Object.keys(n.finance.coef).length) SITE.finance = Object.assign({}, SITE.finance, n.finance);
 
     // Textos
     const texts = settings.textos || {};

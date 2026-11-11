@@ -16,6 +16,14 @@
   const group = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const euro = (n) => (n == null ? "Consultar precio" : group(n) + "\u00a0€");
   const km = (n) => group(n) + "\u00a0km";
+  /* Financiación: cuota = importe × coeficiente del plazo */
+  const FIN = () => (SITE.finance && SITE.finance.coef) || {};
+  const terms = () => Object.keys(FIN()).map(Number).sort((a, b) => a - b);
+  const maxTerm = () => Math.max(...terms());
+  const cuota = (importe, meses) => (importe > 0 && FIN()[meses] ? importe * FIN()[meses] : null);
+  const euro2 = (n) => n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "\u00a0€";
+  const priceOf = (v) => (v.oferta != null && v.precio != null && v.oferta < v.precio ? v.oferta : v.precio);
+  const onSale = (v) => v.oferta != null && v.precio != null && v.oferta < v.precio;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const icon = (id) => `<svg class="i" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 
@@ -87,7 +95,7 @@
       if (en.isIntersecting) navLinks.forEach((a) => a.setAttribute("aria-current", String(a.getAttribute("href") === "#" + en.target.id)));
     });
   }, { rootMargin: "-45% 0px -50% 0px" });
-  ["inicio", "coches", "vendidos", "servicios", "nosotros", "ubicacion"].forEach((id) => { const el = document.getElementById(id); if (el) spy.observe(el); });
+  ["inicio", "coches", "financiacion", "vendidos", "servicios", "nosotros", "ubicacion"].forEach((id) => { const el = document.getElementById(id); if (el) spy.observe(el); });
 
   /* Huecos de fotos: si la foto aún no existe, se muestra "Foto pendiente".
      Para poner la foto basta con guardarla en img/fotos/ con el nombre indicado. */
@@ -127,10 +135,11 @@
     `<img ${srcAttr(photo(v, n), "m")} alt="${esc(title(v))}${n ? ", foto " + (n + 1) : ""}" width="1200" height="900" ${lazy ? 'loading="lazy"' : ""} decoding="async">`;
 
   const card = (v) => `
-    <li class="card" data-id="${v.id}">
+    <li class="card${v.reservado ? " card--reserved" : ""}" data-id="${v.id}">
       <div class="card__media">
         ${media(v)}
         <span class="card__badge">${v.tipo === "moto" ? "Moto · " : ""}${esc(v.combustible)}</span>
+        ${v.reservado ? `<span class="card__status card__status--res">Reservado</span>` : onSale(v) ? `<span class="card__status card__status--sale">Oferta</span>` : ""}
         <span class="card__warranty">${icon("shield")}Garantía ${esc(v.garantia)}</span>
       </div>
       <div class="card__body">
@@ -141,7 +150,7 @@
           ${v.cv ? `<li>${icon("bolt")}${v.cv}\u00a0CV</li>` : ""}
         </ul>
         <div class="card__foot">
-          <p class="card__price${v.precio == null ? " card__price--ask" : ""}">${euro(v.precio)}${v.precio != null ? "<small>Financiación a tu medida</small>" : ""}</p>
+          <p class="card__price${v.precio == null ? " card__price--ask" : ""}${onSale(v) ? " card__price--sale" : ""}">${onSale(v) ? `<s>${euro(v.precio)}</s>` : ""}${euro(priceOf(v))}${priceOf(v) != null && cuota(priceOf(v), maxTerm()) ? `<small>Desde <b>${group(Math.ceil(cuota(priceOf(v), maxTerm())))}\u00a0€/mes</b></small>` : ""}</p>
           <button class="card__cta" type="button" aria-label="Ver detalles del ${esc(title(v))}">Ver detalles ${icon("arrow")}</button>
         </div>
       </div>
@@ -151,8 +160,9 @@
     const sorters = {
       "destacados": () => 0,
       "recientes": (a, b) => b.anio - a.anio || a.km - b.km,
-      "precio-asc": (a, b) => (a.precio ?? 1e9) - (b.precio ?? 1e9),
-      "precio-desc": (a, b) => (b.precio ?? 0) - (a.precio ?? 0),
+      "precio-asc": (a, b) => (priceOf(a) ?? 1e9) - (priceOf(b) ?? 1e9),
+      "precio-desc": (a, b) => (priceOf(b) ?? 0) - (priceOf(a) ?? 0),
+      "ofertas": (a, b) => onSale(b) - onSale(a),
       "km-asc": (a, b) => a.km - b.km
     };
     const all = VEHICLES.filter((v) => type === "todos" || v.tipo === type).slice().sort(sorters[sortEl.value]);
@@ -236,13 +246,14 @@
     if (n > 1) swipe(main, () => galleryShow(gal.i + 1, 1), () => galleryShow(gal.i - 1, -1));
     $("#vd-title").textContent = title(v);
     $("#vd-version").textContent = `${v.tipo === "moto" ? "Moto" : "Coche"} · ${v.combustible}${v.garantia ? " · Garantía " + v.garantia : ""}`;
-    $("#vd-price").innerHTML = euro(v.precio);
+    $("#vd-price").innerHTML = (onSale(v) ? `<s>${euro(v.precio)}</s> <span class="vd__sale">${euro(v.oferta)}</span>` : euro(v.precio)) + (v.reservado ? ` <span class="vd__res">Reservado</span>` : "");
+    finMini(priceOf(v));
     const specs = [["Año", v.anio], ["Kilómetros", km(v.km)], ["Potencia", v.cv ? v.cv + "\u00a0CV" : "Consultar"], ["Combustible", v.combustible], ["Cambio", v.cambio], ["Garantía", v.garantia], ["Ubicación", "Las Palmas"]].filter(([, val]) => val != null && val !== "");
     $("#vd-specs").innerHTML = specs.map(([k, val]) => `<div><dt>${k}</dt><dd>${esc(val)}</dd></div>`).join("");
     const equip = (v.equipamiento || "").split("\n").map((x) => x.trim()).filter(Boolean);
     $("#vd-equip").innerHTML = (equip.length ? equip : ["Garantía incluida", "Financiación a tu medida", "Entregas en islas y península", "Te asesoramos sin compromiso"]).map((e) => `<li>${esc(e)}</li>`).join("");
     const desc = $("#vd-desc"); if (desc) { desc.textContent = v.descripcion || ""; desc.hidden = !v.descripcion; }
-    $("#vd-wa").href = window.waLink(`Hola, me interesa el ${title(v)} (${v.anio}, ${km(v.km)})${v.precio != null ? " por " + euro(v.precio) : ""}. ¿Sigue disponible?`);
+    $("#vd-wa").href = window.waLink(`Hola, me interesa el ${title(v)} (${v.anio}, ${km(v.km)})${priceOf(v) != null ? " por " + euro(priceOf(v)) : ""}. ¿Sigue disponible?`);
     dialog.showModal ? dialog.showModal() : dialog.setAttribute("open", "");
   }
 
@@ -317,6 +328,47 @@
     d.addEventListener("click", (e) => { if (e.target.closest("[data-close]") || e.target === d) d.close(); });
     d.addEventListener("close", () => { if (d === dialog && lastTrigger) lastTrigger.focus(); });
   });
+
+  /* Calculadora en la ficha del coche */
+  function finMini(importe) {
+    const box = $("#vd-fin"); if (!box) return;
+    if (!importe || !terms().length) { box.hidden = true; return; }
+    box.hidden = false;
+    let sel = maxTerm();
+    const draw = () => {
+      box.innerHTML = `
+        <div class="vfin__head"><span>Financiación</span><strong>${euro2(cuota(importe, sel))}<small>/mes</small></strong></div>
+        <div class="vfin__terms" role="group" aria-label="Plazo en meses">${terms().map((t) => `<button type="button" data-t="${t}" aria-pressed="${t === sel}">${t}</button>`).join("")}</div>
+        <p class="vfin__note">${sel} meses · cuota orientativa sobre ${euro(importe)} · TIN ${esc(SITE.finance.tin || "")}</p>`;
+    };
+    draw();
+    box.onclick = (e) => { const b = e.target.closest("[data-t]"); if (b) { sel = Number(b.dataset.t); draw(); } };
+  }
+
+  /* Calculadora de cuota (sección Financiación) */
+  const calc = $("#calc");
+  if (calc && terms().length) {
+    const amount = $("#calc-amount"), range = $("#calc-range"), termsBox = $("#calc-terms"), out = $("#calc-out"), note = $("#calc-note"), wa = $("#calc-wa");
+    let sel = 60;
+    if (!FIN()[sel]) sel = terms()[Math.floor(terms().length / 2)];
+    termsBox.innerHTML = terms().map((t) => `<button type="button" data-t="${t}">${t}<small>meses</small></button>`).join("");
+    const parse = (x) => Number(String(x).replace(/\D/g, "")) || 0;
+    function upd(from) {
+      let v = from === "range" ? Number(range.value) : parse(amount.value);
+      if (from === "range") amount.value = group(v); else range.value = Math.min(Math.max(v, range.min), range.max);
+      $$("button", termsBox).forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.t) === sel)));
+      const c = cuota(v, sel);
+      out.textContent = c ? euro2(c) : "—";
+      note.textContent = c ? `${group(v)} € a ${sel} meses · ${sel} cuotas · TIN ${SITE.finance.tin || ""}` : "Escribe el importe que quieres financiar";
+      wa.href = window.waLink(c ? `Hola, me gustaría financiar ${group(v)} € a ${sel} meses (cuota aprox. ${euro2(c)}/mes). ¿Me dais más información?` : "Hola, me gustaría información sobre financiación.");
+      range.style.setProperty("--p", ((range.value - range.min) / (range.max - range.min)) * 100 + "%");
+    }
+    termsBox.addEventListener("click", (e) => { const b = e.target.closest("[data-t]"); if (b) { sel = Number(b.dataset.t); upd(); } });
+    range.addEventListener("input", () => upd("range"));
+    amount.addEventListener("input", () => upd());
+    amount.addEventListener("blur", () => { amount.value = group(parse(amount.value)); });
+    upd("range");
+  }
 
   /* 6. Vende tu coche: el mensaje se escribe mientras rellenas ------------ */
   const form = $("#sell-form");

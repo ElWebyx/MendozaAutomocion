@@ -46,6 +46,13 @@ window.SITE = {
     facebook: "https://www.facebook.com/mendozaautomocion"
   },
 
+  // Financiación: coeficientes de la financiera (fila "Vida Plus").
+  // Cuota al mes = importe × coeficiente. Se pueden cambiar desde el panel.
+  finance: {
+    tin: "10,75 %",
+    coef: { 24: 0.047888, 36: 0.033691, 48: 0.026881, 60: 0.022925, 72: 0.020208, 84: 0.018404, 96: 0.017095 }
+  },
+
   // Panel de administrador (Firebase). Mira la guía en ADMIN-LEEME.md.
   // Con esto vacío la web funciona igual, con los datos de estos archivos.
   firebase: {

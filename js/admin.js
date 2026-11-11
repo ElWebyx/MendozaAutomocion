@@ -234,12 +234,13 @@
 
   function rowHTML(r, sold) {
     const meta = [r.anio, r.km != null ? group(r.km) + " km" : null, r.cv ? r.cv + " CV" : null, r.combustible].filter(Boolean).join(" · ");
-    const price = r.precio != null ? group(r.precio) + " €" : "Consultar";
+    const sale = r.oferta != null && r.precio != null && r.oferta < r.precio;
+    const price = r.precio != null ? (sale ? `<s>${group(r.precio)} €</s> <span class="sale">${group(r.oferta)} €</span>` : group(r.precio) + " €") : "Consultar";
     return `
       <li class="row" data-id="${r.id}">
         <img class="row__img" ${srcAttr(thumbOf(r), "m")} alt="" loading="lazy">
         <div class="row__main">
-          <p class="row__title">${esc(titleOf(r))} ${r.tipo === "moto" ? '<span class="tag">Moto</span>' : ""}${r.destacado && !sold ? '<span class="tag tag--red">Destacado</span>' : ""}</p>
+          <p class="row__title">${esc(titleOf(r))} ${r.tipo === "moto" ? '<span class="tag">Moto</span>' : ""}${r.destacado && !sold ? '<span class="tag tag--red">Destacado</span>' : ""}${r.reservado && !sold ? '<span class="tag tag--res">Reservado</span>' : ""}${sale && !sold ? '<span class="tag tag--red">Oferta</span>' : ""}</p>
           <p class="row__meta">${esc(meta)}${!sold ? ` · ${(r.fotos || []).length} fotos` : ""}</p>
         </div>
         ${sold ? "" : `<p class="row__price">${price}</p>`}
@@ -247,7 +248,7 @@
           ${sold ? "" : `<button type="button" class="icon-btn" data-act="up" aria-label="Subir">↑</button><button type="button" class="icon-btn" data-act="down" aria-label="Bajar">↓</button>`}
           <button type="button" class="btn btn--glass btn--sm" data-act="edit">Editar</button>
           ${sold ? `<button type="button" class="btn btn--ghost btn--sm" data-act="unsell">Volver al stock</button>`
-                 : `<button type="button" class="btn btn--ghost btn--sm" data-act="sell">Vendido</button>`}
+                 : `<button type="button" class="btn btn--ghost btn--sm" data-act="reserve">${r.reservado ? "Quitar reserva" : "Reservado"}</button><button type="button" class="btn btn--ghost btn--sm" data-act="sell">Vendido</button>`}
           <button type="button" class="icon-btn icon-btn--bad" data-act="del" aria-label="Borrar">🗑</button>
         </div>
       </li>`;
@@ -284,12 +285,16 @@
       if (act === "edit") return openEditor(r);
       if (act === "sell") {
         if (!(await confirmBox("Marcar como vendido", `${titleOf(r)} saldrá del stock y pasará a «Vendidos».`, "Marcar vendido"))) return;
-        await patch(id, { vendido: true, vendido_en: new Date().toISOString(), destacado: false });
+        await patch(id, { vendido: true, vendido_en: new Date().toISOString(), destacado: false, reservado: false });
         if (settings.negocio && settings.negocio.soldTotal != null) {
           settings.negocio.soldTotal = Number(settings.negocio.soldTotal) + 1;
           await saveSetting("negocio", settings.negocio); fillBusiness();
         }
         toast("Marcado como vendido. Ya está en la web.");
+      }
+      if (act === "reserve") {
+        await patch(id, { reservado: !r.reservado });
+        toast(r.reservado ? "Marcado como reservado. Ya está en la web." : "Reserva quitada. Ya está en la web.");
       }
       if (act === "unsell") {
         await patch(id, { vendido: false, vendido_en: null });
@@ -337,6 +342,7 @@
       f.anio.value = r.anio ?? ""; f.km.value = r.km != null ? group(r.km) : ""; f.cv.value = r.cv ?? "";
       f.combustible.value = r.combustible || "Gasolina"; f.cambio.value = r.cambio || "";
       f.precio.value = r.precio != null ? group(r.precio) : ""; f.garantia.value = r.garantia || "";
+      f.oferta.value = r.oferta != null ? group(r.oferta) : ""; f.reservado.checked = !!r.reservado;
       f.destacado.checked = !!r.destacado; f.descripcion.value = r.descripcion || ""; f.equipamiento.value = r.equipamiento || "";
     } else { f.garantia.value = "12 meses"; f.anio.value = new Date().getFullYear() - 3; }
     $("#ve-msg").hidden = true;
@@ -390,12 +396,13 @@
     const f = edForm.elements, msg = $("#ve-msg"), btn = $("#ve-save");
     msg.hidden = true;
     if (!f.marca.value.trim()) { msg.textContent = "Escribe al menos la marca."; msg.hidden = false; f.marca.focus(); return; }
+    if (num(f.oferta.value) != null && (num(f.precio.value) == null || num(f.oferta.value) >= num(f.precio.value))) { msg.textContent = "El precio en oferta tiene que ser más bajo que el precio normal."; msg.hidden = false; f.oferta.focus(); return; }
     if (uploading) { msg.textContent = "Espera a que terminen de subir las fotos."; msg.hidden = false; return; }
     const data = {
       tipo: f.tipo.value, marca: f.marca.value.trim(), modelo: f.modelo.value.trim(),
       anio: num(f.anio.value), km: num(f.km.value), cv: num(f.cv.value),
       combustible: f.combustible.value, cambio: f.cambio.value || null,
-      precio: num(f.precio.value), garantia: f.garantia.value.trim() || null,
+      precio: num(f.precio.value), oferta: num(f.oferta.value), reservado: f.reservado.checked, garantia: f.garantia.value.trim() || null,
       destacado: f.destacado.checked, descripcion: f.descripcion.value.trim() || null,
       equipamiento: f.equipamiento.value.trim() || null, fotos: photos
     };
@@ -471,6 +478,9 @@
     ["phoneDisplay", "email", "address", "addressShort"].forEach((k) => { f[k].value = n[k] || ""; });
     f.whatsapp.value = (settings.negocio && settings.negocio.whatsapp) || "";
     f.soldTotal.value = n.soldTotal ?? window.SOLD_TOTAL ?? "";
+    const fin = Object.assign({}, window.SITE.finance, n.finance || {});
+    f.tin.value = fin.tin || "";
+    $("#fin-editor").innerHTML = [24, 36, 48, 60, 72, 84, 96].map((t) => `<label class="field"><span>${t} meses</span><input type="text" inputmode="decimal" data-term="${t}" value="${fin.coef && fin.coef[t] != null ? String(fin.coef[t]).replace(".", ",") : ""}"></label>`).join("");
     f.instagram.value = (n.social && n.social.instagram) || "";
     f.facebook.value = (n.social && n.social.facebook) || "";
     const sch = n.schedule || {};
@@ -518,6 +528,7 @@
       phoneDisplay: f.phoneDisplay.value.trim(), whatsapp: f.whatsapp.value.trim(), email: f.email.value.trim(),
       address: f.address.value.trim(), addressShort: f.addressShort.value.trim(),
       soldTotal: num(f.soldTotal.value) ?? 0,
+      finance: { tin: f.tin.value.trim(), coef: Object.fromEntries($$("#fin-editor input").map((i) => [i.dataset.term, Number(i.value.replace(",", "."))]).filter(([, v]) => v > 0)) },
       social: { instagram: f.instagram.value.trim(), facebook: f.facebook.value.trim() },
       schedule: readSchedule()
     });
@@ -529,7 +540,7 @@
 
   /* --------------------------------------------------------------- Textos */
   const SECTION_NAMES = {
-    inicio: "Portada (inicio)", coches: "Coches disponibles", vendidos: "Vendidos", servicios: "Servicios",
+    inicio: "Portada (inicio)", coches: "Coches disponibles", financiacion: "Financiación", vendidos: "Vendidos", servicios: "Servicios",
     proceso: "Cómo comprar (pasos)", vender: "Vende tu coche", encargo: "MD Auto Broker", nosotros: "Sobre nosotros",
     ubicacion: "Ubicación", cta: "Cierre final", pie: "Pie de página"
   };
