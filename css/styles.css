@@ -1275,3 +1275,5 @@ body { background: var(--black); color: rgba(255, 255, 255, 0.86); }
 .calc__legal { margin: 12px 0 0; font-size: .75rem; text-align: center; color: rgba(255,255,255,.4); }
 @media (max-width: 960px) { .fin { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .calc__terms { grid-template-columns: repeat(4, 1fr); } .calc { border-radius: 22px; } }
+.vd__actions { flex-wrap: wrap; }
+@media (max-width: 600px) { .vd__actions .btn { flex: 1 1 100%; justify-content: center; } }
