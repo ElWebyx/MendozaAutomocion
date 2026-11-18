@@ -216,9 +216,22 @@
     });
   }
 
+  /* Enlace propio de cada coche: https://mendozaautomocion.com/?coche=ID */
+  const carUrl = (v) => `${location.origin}${location.pathname}?coche=${encodeURIComponent(v.id)}`;
+  let current = null;
+  function setUrl(v) {
+    try {
+      const u = new URL(location.href);
+      if (v) u.searchParams.set("coche", v.id); else u.searchParams.delete("coche");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    } catch (e) {}
+  }
+
   function openVehicle(id, trigger) {
     const v = VEHICLES.find((x) => String(x.id) === String(id));
     if (!v) return;
+    current = v; setUrl(v);
+    document.title = `${title(v)} · Mendoza Automoción`;
     lastTrigger = trigger;
     const n = photos(v).length;
     gal = { v, i: 0, n };
@@ -326,7 +339,30 @@
 
   $$("dialog").forEach((d) => {
     d.addEventListener("click", (e) => { if (e.target.closest("[data-close]") || e.target === d) d.close(); });
-    d.addEventListener("close", () => { if (d === dialog && lastTrigger) lastTrigger.focus(); });
+    d.addEventListener("close", () => {
+      if (d !== dialog) return;
+      if (lastTrigger) lastTrigger.focus();
+      current = null; setUrl(null); document.title = baseTitle;
+    });
+  });
+
+  /* Botón Compartir: en el móvil abre el menú de compartir; en el ordenador copia el enlace */
+  const baseTitle = document.title;
+  const shareBtn = $("#vd-share");
+  if (shareBtn) shareBtn.addEventListener("click", async () => {
+    if (!current) return;
+    const url = carUrl(current);
+    const text = `${title(current)} · ${current.anio} · ${km(current.km)}${priceOf(current) != null ? " · " + euro(priceOf(current)) : ""}`;
+    const label = $("span", shareBtn);
+    try {
+      if (navigator.share && window.matchMedia("(pointer: coarse)").matches) { await navigator.share({ title: title(current), text, url }); return; }
+      await navigator.clipboard.writeText(url);
+      label.textContent = "¡Enlace copiado!";
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      window.prompt("Copia este enlace:", url);
+    }
+    setTimeout(() => { label.textContent = "Compartir"; }, 2200);
   });
 
   /* Calculadora en la ficha del coche */
@@ -580,4 +616,13 @@
   requestAnimationFrame(start);
   setTimeout(start, 120);
   render();
+  // Si se entra con ?coche=ID, se abre directamente su ficha
+  const wanted = new URLSearchParams(location.search).get("coche");
+  if (wanted) {
+    if (VEHICLES.some((x) => String(x.id) === wanted)) {
+      document.getElementById("coches").scrollIntoView();
+      setTimeout(() => openVehicle(wanted, null), 300);
+    } else setUrl(null);
+  }
+
 });

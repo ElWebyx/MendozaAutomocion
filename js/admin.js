@@ -247,6 +247,7 @@
         <div class="row__actions">
           ${sold ? "" : `<button type="button" class="icon-btn" data-act="up" aria-label="Subir">↑</button><button type="button" class="icon-btn" data-act="down" aria-label="Bajar">↓</button>`}
           <button type="button" class="btn btn--glass btn--sm" data-act="edit">Editar</button>
+          ${sold ? "" : `<button type="button" class="btn btn--ghost btn--sm" data-act="link" title="Copiar el enlace de este coche">Enlace</button>`}
           ${sold ? `<button type="button" class="btn btn--ghost btn--sm" data-act="unsell">Volver al stock</button>`
                  : `<button type="button" class="btn btn--ghost btn--sm" data-act="reserve">${r.reservado ? "Quitar reserva" : "Reservado"}</button><button type="button" class="btn btn--ghost btn--sm" data-act="sell">Vendido</button>`}
           <button type="button" class="icon-btn icon-btn--bad" data-act="del" aria-label="Borrar">🗑</button>
@@ -283,6 +284,12 @@
     const act = btn.dataset.act;
     try {
       if (act === "edit") return openEditor(r);
+      if (act === "link") {
+        const url = `${location.origin}/?coche=${encodeURIComponent(id)}`;
+        try { await navigator.clipboard.writeText(url); toast("Enlace copiado: " + url); }
+        catch (e) { window.prompt("Copia este enlace:", url); }
+        return;
+      }
       if (act === "sell") {
         if (!(await confirmBox("Marcar como vendido", `${titleOf(r)} saldrá del stock y pasará a «Vendidos».`, "Marcar vendido"))) return;
         await patch(id, { vendido: true, vendido_en: new Date().toISOString(), destacado: false, reservado: false });
